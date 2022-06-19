@@ -1,6 +1,6 @@
 /*
  * logger.h
- * Copyright (C) 2022 tux <tux@tux-pc>
+ * Copyright (C) 2022 tux <K3130>
  *
  * Distributed under terms of the MIT license.
  */
@@ -10,15 +10,15 @@
 
 #include <iostream>
 
-class Logger
+class SingleLogger
 {
 	public:
-		Logger(const Logger&) = delete; //delete copy
-		Logger& operator=(const Logger&) = delete; //delete assignment
+		SingleLogger(const SingleLogger&) = delete; //delete copy
+		SingleLogger& operator=(const SingleLogger&) = delete; //delete assignment
 	
-		static Logger& Instance()
+		static SingleLogger& Instance()
 		{
-			static Logger instance;
+			static SingleLogger instance;
 			return instance;
 		}
 	
@@ -32,8 +32,48 @@ class Logger
 		}
 
 	private:
-		Logger() : m_os(std::cerr) {};
+		SingleLogger() : m_os(std::cerr) {};
 		std::ostream& m_os;
 		
 };
+
+class ProxyLogger
+{
+	public:
+		virtual void info() = 0;
+		virtual void error() = 0;
+};
+
+class Logger : public ProxyLogger
+{
+	void info() override
+	{
+		std::cout << "info" << std::endl;
+	}
+	void error() override
+	{
+		std::cout << "error" << std::endl;
+	}
+};
+
+class LevelLogger : public ProxyLogger
+{
+	public:
+		LevelLogger(int aLevel, ProxyLogger *aLogger) : m_level(aLevel), m_logger(aLogger) {};
+		void info() override
+		{
+			if(m_level > 0)
+			{
+				m_logger->info();
+			}
+		}
+		void error() override
+		{
+			m_logger->error();
+		}
+	private:
+		int m_level;
+		ProxyLogger *m_logger;
+};
+
 #endif /* !LOGGER_H */
